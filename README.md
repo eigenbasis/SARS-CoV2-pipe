@@ -67,6 +67,7 @@ Pipeline is used to generate .vcf files & human-readable csv files from Illumina
  	- testing_lab
  	- normalized_sample_type
  	- sampling_date
+ 	- lineage
 ### Get a full path to the folder that contains fastq files to be analysed.
  - Fastq files should contain pair-end reads.
  - There should be distinct files for forward and reverse reads e.g. read_1 and read_2 files.
