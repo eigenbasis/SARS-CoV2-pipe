@@ -30,54 +30,65 @@ mut_data = get_mut_data(report_path)
 ['receiving_lab_sample_id','testing_lab','testing_lab_sample_id','sample_type','normalized_sample_type','sampling_date','notification_date','seq_date','seq_institution',
 'result','ordering_institution','E_gene','ORF1a','RdRP/S','lineage','genome_length','genome_N_percentage','genome_GC_content','SEQ_DATE',
 'COVERAGE(%)','AVERAGE_COVERAGE','MAPPED_FRACTION','READS_MAPPED','TOTAL_READS']
-
 lv_name_list = [
     'Parauga ID',
     'Testēšanas laboratorija',
     'Par. veids',
-    'Par. ņemšanas datums',
-    'Rezultātu paziņošanas datums',
-    'Sekvenēšanas datums',
-    'Sekvenēšanas vieta',
-    'RLPĶR Rezultāts',
-    'Sekvencēšanas pasūtītājs',
-    'Ct - E-gēns',
-    'Ct - ORF1a',
-    'Ct - RdRP/S',
-    'Celms',
-    'Consensus sekv. garums',
-    'Consensus sekv. N saturs',
-    'Consensus sekv. GC saturs',
-    'Genoma pārklājums(%)',
-    'Vidējais pārklājums',
-    'Kartēta lasījumu daļa(%)',
-    'Kartēto lasījumu skaits',
-    'Kopējais lasījumu skaits']
+    'Par. ņemšanas datums']
 
-#Data table
 metadata_list = [
     'receiving_lab_sample_id',
     'testing_lab',
     'normalized_sample_type',
-    'sampling_date',
-    'notification_date',
-    'seq_date',
-    'seq_institution',
-    'result',
-    'ordering_institution',
-    'E_gene',
-    'ORF1a',
-    'RdRP/S',
-    'lineage',
-    'genome_length',
-    'genome_N_percentage',
-    'genome_GC_content',
-    'COVERAGE(%)',
-    'AVERAGE_COVERAGE'
-    ,'MAPPED_FRACTION'
-    ,'READS_MAPPED'
-    ,'TOTAL_READS'
-] 
+    'sampling_date']
+
+# lv_name_list = [
+#     'Parauga ID',
+#     'Testēšanas laboratorija',
+#     'Par. veids',
+#     'Par. ņemšanas datums',
+#     'Rezultātu paziņošanas datums',
+#     'Sekvenēšanas datums',
+#     'Sekvenēšanas vieta',
+#     'RLPĶR Rezultāts',
+#     'Sekvencēšanas pasūtītājs',
+#     'Ct - E-gēns',
+#     'Ct - ORF1a',
+#     'Ct - RdRP/S',
+#     'Celms',
+#     'Consensus sekv. garums',
+#     'Consensus sekv. N saturs',
+#     'Consensus sekv. GC saturs',
+#     'Genoma pārklājums(%)',
+#     'Vidējais pārklājums',
+#     'Kartēta lasījumu daļa(%)',
+#     'Kartēto lasījumu skaits',
+#     'Kopējais lasījumu skaits']
+
+#Data table
+# metadata_list = [
+#     'receiving_lab_sample_id',
+#     'testing_lab',
+#     'normalized_sample_type',
+#     'sampling_date',
+#     'notification_date',
+#     'seq_date',
+#     'seq_institution',
+#     'result',
+#     'ordering_institution',
+#     'E_gene',
+#     'ORF1a',
+#     'RdRP/S',
+#     'lineage',
+#     'genome_length',
+#     'genome_N_percentage',
+#     'genome_GC_content',
+#     'COVERAGE(%)',
+#     'AVERAGE_COVERAGE'
+#     ,'MAPPED_FRACTION'
+#     ,'READS_MAPPED'
+#     ,'TOTAL_READS'
+# ] 
 mutation_list = ['B.1.1.7+E484K','B.1.616','B.1.617','CLUSTER_5','E484K','N501Y','ORF1a(del3675-3677)','P.1','S_GENE_DELETION','Y453F','B.1.525','B.1.427/B.1.429','P.3','B.1.617.1','B.1.617.2','B.1.617.3','B.1.620','B.1.621','B.1.351',"B.1.1.7"]
 combined_data = mut_data #for inhouse data
 Columns = [TableColumn(field=Ci, title=Ci) for Ci in lv_name_list+mutation_list] # bokeh columns

@@ -2,8 +2,8 @@ import pandas as pd, os, sys
 from pathlib import Path
 
 '''The script is used to automatically update summary table that is used for data visualization each time new batch of samples is processed with a metadata file.'''
-full_path = Path(os.path.dirname(os.path.realpath(__file__))).parents[2] #two-path up path
-summary_path = f'{full_path}/4_reports/summary/sample_summary_stats1.csv' #path to summary file
+full_path = Path(os.path.dirname(os.path.realpath(__file__))).parents[1] #one-path up path
+summary_path = f'{full_path}/test_summary_stats.csv' #path to summary file
 report_path = sys.argv[1] #path to freshly generated report containing metadata is expected
 summary_df, report_df = pd.read_csv(summary_path), pd.read_csv(report_path) #read both summary table and new report
 

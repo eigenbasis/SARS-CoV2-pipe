@@ -13,7 +13,7 @@ if len(sys.argv)==1: #if no command-line arguments provided - display help and s
 args = parser.parse_args() #args list from command-line input
 
 full_path = Path(os.path.dirname(os.path.realpath(__file__))).parents[0] #fastq processing folder
-plot_data = f'{Path(os.path.dirname(os.path.realpath(__file__))).parents[1]}/4_reports/summary/sample_summary_stats1.csv' #path to summary file to be used in plotting
+plot_data = f'{Path(os.path.dirname(os.path.realpath(__file__))).parents[0]}/test_summary_stats.csv' #path to summary file to be used in plotting
 # tool_path = f'/mnt/c/cov_seq/tools' #path to tools
 tool_path = f'/home/user/tools'
 fastq_path = args.fastq #path to fastq files from command-line argument
@@ -71,5 +71,8 @@ if report_path is None:
 if metadata_path is not None: os.system(f'python sample_stat_assembly.py {report_path}') #update summary statistics table from new mutation report
 
 if args.visualize: #run data visualization
-    os.chdir(f'{full_path}/fastq_processing/plotting/')
-    subprocess.check_call(['bokeh', 'serve', '--show', 'lablin_data_serve.py', '--args', plot_data])
+    if len(pd.read_csv(plot_data)) >= 2: #if less than 2 records are in the summary stats table - do not show dashboard
+        os.chdir(f'{full_path}/fastq_processing/plotting/')
+        subprocess.check_call(['bokeh', 'serve', '--show', 'lablin_data_serve.py', '--args', plot_data])
+    else:
+        print('Data does not contain enough samples to create the dashboard (2 or more are required).')
