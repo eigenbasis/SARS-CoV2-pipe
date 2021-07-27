@@ -62,7 +62,7 @@ Pipeline is used to generate .vcf files & human-readable csv files from Illumina
 ### Set the summary_path in subprocess/sample_stat_assembly.py script and plot_data in process_local_fastq.py script.
  - summary_path = f'path_to_base_stat_file/sample_summary_stats.csv'
  - plot_data = f'path_to_base_stat_file/sample_summary_stats.csv'
- - the sample_summary_stats.csv file must contain the following columns:
+ - the sample_summary_stats.csv file must contain the following columns (see NMRL_SARS_CoV2_Inhouse_pipeline/test_summary_stats.csv for example):
   	- receiving_lab_sample_id
  	- testing_lab
  	- normalized_sample_type
@@ -84,6 +84,7 @@ Pipeline is used to generate .vcf files & human-readable csv files from Illumina
  - Ann.csv file for each sample contains list of detected mutations.
  - Depth_plot.html file contains coverage plot showing number of reads mapped to each position of reference genome.
 ### Metadata file
+ - See resources/metadata/test_metadata.csv for example.
  - Metadata file should be placed under resources/metadata directory.
  - Values **must be stored as text**.
  - It should be a csv file containing the following columns:
