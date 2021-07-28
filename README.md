@@ -68,6 +68,14 @@ Pipeline is used to generate .vcf files & human-readable csv files from Illumina
  	- normalized_sample_type
  	- sampling_date
  	- lineage
+ - if any additional columns are available to display on dashboard table, 
+   please add 
+   - column name to the metadata_list variable in the fastq_processing/plotting/lablin_data_serve.py script.
+   - appropriate name to be displayed on dashboard to the corresponding position of lv_name_list in the fastq_processing/plotting/lablin_data_serve.py script.
+   - example:
+   	seq_date column to be added from summary_table to the dashboard table
+	metadata_list = ['receiving_lab_sample_id', 'testing_lab', 'normalized_sample_type', 'sampling_date', 'seq_date']
+	lv_name_list = ['Parauga ID', 'Testēšanas laboratorija', 'Par. veids', 'Par. ņemšanas datums', 'Sekv. datums']
 ### Get a full path to the folder that contains fastq files to be analysed.
  - Fastq files should contain pair-end reads.
  - There should be distinct files for forward and reverse reads e.g. read_1 and read_2 files.
