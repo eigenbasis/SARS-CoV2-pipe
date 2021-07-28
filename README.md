@@ -84,7 +84,7 @@ Pipeline is used to generate .vcf files & human-readable csv files from Illumina
 	python process_local_fastq.py -f path_to_fastq_containing_folder -m {metadata_file_name} -v {True/False}
  - metadata file name should be provided in order to include freshly-processed data into visuialization (file should be placed under resources/metadata)
  - If no metadata file name is provided, the pipeline will only generate mutation_report.csv (base statistics file will not be updated)
- - if v option is set to True - bokeh visualization will be displayed based on plot_data summary stats
+ - if v option is set to True - bokeh visualization will be displayed based on plot_data summary stats (if data on 2 or more samples is available)
 ### View output files in the reports folder
  - Mutation_report.csv file contains summary statistics about each sample.
     - Lineage and mutation columns report fraction of mutations that matched the given lineage/mutation filter for the given sample.
