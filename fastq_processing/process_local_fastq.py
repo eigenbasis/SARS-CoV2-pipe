@@ -4,7 +4,7 @@ from pathlib import Path
 parser = argparse.ArgumentParser(description='A script to run the analysis of SARS-CoV19 sequencing data in fastq format.') #argparser object to provide command-line functionality
 req_arg_grp = parser.add_argument_group('required arguments') #add optional argument group
 req_arg_grp.add_argument('-f', '--fastq', metavar='\b', help = 'Full path to the folder containing fastq files to process.', required=True) #required fastq file argument
-parser.add_argument('-m', '--metadata', metavar='\b', help = 'Path to the metadata file.', default=None, required=False) #optional metadata argument
+parser.add_argument('-m', '--metadata', metavar='\b', help = 'Name of the metadata file under resources/metadata directory.', default=None, required=False) #optional metadata argument
 parser.add_argument('-v', '--visualize', metavar='\b', help = 'True/False if data visualization is required/not required.', default=False, required=False) #optional visualization argument
 
 if len(sys.argv)==1: #if no command-line arguments provided - display help and stop script excecution
