@@ -29,6 +29,7 @@ for (root,dirs,files) in os.walk(fastq_path, topdown=True): # iterate over all s
         if 'fastq.gz' in name: file_list.append(os.path.join(root, name)) 
 
 seq_id_list = set(re.search(r'([0-9]{10}|[0-9]{9})', file).group(0) for file in file_list) # get set of unique sample ids form fastq file list
+seq_lab_dict = {id:'' for id in seq_id_list} #init dict to store sequencing lab if it is included in the folder name
 date_dict = {id:'' for id in seq_id_list} #init dict to store sequencing date for each sample
 for id in seq_id_list: read_dict[id]=[] #init dict to store paths to read1 and read2 files
 for file in file_list: #add read_1 and read_2 path to list matched to sample id
@@ -37,7 +38,10 @@ for file in file_list: #add read_1 and read_2 path to list matched to sample id
         date_dict[re.search(r'([0-9]{10}|[0-9]{9})', file).group(0)] = re.search(r'[0-9]{4}-[0-9]{2}-[0-9]{2}', file).group(0) 
     else: 
         date_dict[re.search(r'([0-9]{10}|[0-9]{9})', file).group(0)] = '0'
-
+    if re. search(r'NMRL', file):
+        seq_lab_dict[re.search(r'([0-9]{10}|[0-9]{9})', file).group(0)] = re. search(r'NMRL', file).group(0)
+    else:
+        seq_lab_dict[re.search(r'([0-9]{10}|[0-9]{9})', file).group(0)] = '0'
 os.chdir(f'{full_path}/fastq_processing/subprocess')
 
 if not os.path.isdir(f'{full_path}/fastq_processing/reports'): #add reports folders if they do not exist
@@ -60,6 +64,7 @@ for file in os.listdir(f'{full_path}/fastq_processing/reports/report_{report_tim
         report_path = f'{full_path}/fastq_processing/reports/report_{report_time}/{file}'
         mut_df = pd.read_csv(report_path).astype(str)
         mut_df['seq_date'] = mut_df['receiving_lab_sample_id'].map(date_dict)
+        mut_df['seq_lab'] = mut_df['receiving_lab_sample_id'].map(seq_lab_dict)
         seq_date = mut_df.pop('seq_date')
         mut_df.insert(1, 'seq_date', seq_date)
         mut_df.to_csv(report_path, header=True, index = False)
