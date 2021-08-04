@@ -1,9 +1,9 @@
 #Standard libraries
-import concurrent.futures, pandas as pd, os, requests, csv, subprocess, time, sys
+import pandas as pd, os, requests, subprocess, time, sys, json
 from pathlib import Path
-from os.path import dirname, join
 from datetime import date, datetime, timedelta
 #Bokeh modules
+from bokeh.embed import json_item
 from bokeh.io.doc import curdoc
 from bokeh.plotting import figure
 from bokeh.layouts import column, row
@@ -12,24 +12,20 @@ from bokeh.models.layouts import Column
 from bokeh.models.widgets import Button, Select, DateRangeSlider, DataTable, TableColumn 
 from bokeh.models.widgets.groups import CheckboxGroup
 #Own modules
-from get_data import get_raw_data, get_mut_data, quadratic_row_search, quadratic_df_search
 from plotting_functions import stacked_bar_plot
 
 
 
 #General data
 report_time = time.strftime("%m_%d_%Y")
+terminal_time = time.strftime("%Y-%m-%d %H:%M:%S")
 report_path = sys.argv[1]
-
-
 full_path = Path(os.path.dirname(os.path.realpath(__file__))).parents[1]
-raw_data = get_raw_data(report_path)
-mut_data = get_mut_data(report_path)
+df = pd.read_csv(report_path).fillna("0")
+df = df[df.sampling_date.str.match(r'[0-9]{4}-[0-9]{2}-[0-9]{2}')== True]
+unq_dict = {c_n:list(df[f'{c_n}'].drop_duplicates(keep='first')) for c_n in ['testing_lab','lineage', 'sampling_date']}
+unq_dict['sampling_date'] = sorted(unq_dict['sampling_date'])
 
-
-['receiving_lab_sample_id','testing_lab','testing_lab_sample_id','sample_type','normalized_sample_type','sampling_date','notification_date','seq_date','seq_institution',
-'result','ordering_institution','E_gene','ORF1a','RdRP/S','lineage','genome_length','genome_N_percentage','genome_GC_content','SEQ_DATE',
-'COVERAGE(%)','AVERAGE_COVERAGE','MAPPED_FRACTION','READS_MAPPED','TOTAL_READS']
 lv_name_list = [
     'Parauga ID',
     'Testēšanas laboratorija',
@@ -90,68 +86,104 @@ metadata_list = [
 #     ,'TOTAL_READS'
 # ] 
 mutation_list = ['B.1.1.7+E484K','B.1.616','B.1.617','CLUSTER_5','E484K','N501Y','ORF1a(del3675-3677)','P.1','S_GENE_DELETION','Y453F','B.1.525','B.1.427/B.1.429','P.3','B.1.617.1','B.1.617.2','B.1.617.3','B.1.620','B.1.621','B.1.351',"B.1.1.7"]
-combined_data = mut_data #for inhouse data
+combined_data = df #for inhouse data
 Columns = [TableColumn(field=Ci, title=Ci) for Ci in lv_name_list+mutation_list] # bokeh columns
 rename_dict = {eng:lv for eng,lv in zip(metadata_list,lv_name_list)}
 
+#grouping data
+grp_by_date = df.groupby('sampling_date')
+
+#list of dates
+unq_dates = sorted(list(grp_by_date.groups))
+
 #Extracting sample_by_date data
-smpl_info, unq_dict = raw_data[0], raw_data[1]
-smpl_by_date = [len(smpl_info.query(f"sampling_date == '{date}'")) for date in unq_dict['sampling_date']]
+smpl_by_date = list(grp_by_date.size())
 
-#Extracting dataframes that refer to a single testing_lab
-by_ldf_dict = {lab:pd.DataFrame() for lab in unq_dict['testing_lab']}
-with concurrent.futures.ProcessPoolExecutor() as executor: # applying the function in-parallel on different cores
-    results = [executor.submit(quadratic_row_search, unq_dict['sampling_date'], smpl_info, lab, 'testing_lab') for lab in unq_dict['testing_lab']]#submitting function calls to different processes
-    for f in concurrent.futures.as_completed(results): #collecting processing result
-        by_ldf_dict[f.result()[0]] = f.result()[1]
+#extracting data - 1st connection will create json files, subsequent connections will source from pre-made json files instead of processing raw csv file
+try: #if json files with dicts exist - extract data from json files
+    start_time = time.time()
+    with open('by_lab_lin_dict.json', 'r') as file_1:
+        by_lab_lin_dict = json.load(file_1)
+    with open('by_lin_dict.json', 'r') as file_2:
+        by_lin_dict = json.load(file_2)
+    with open('by_lab_lin_dict_rel.json', 'r') as file_3:
+        by_lab_lin_dict_rel = json.load(file_3)
+    with open('by_lin_dict_rel.json', "r") as file_4:
+        by_lin_dict_rel = json.load(file_4)
+    end_time = time.time()
+    print(f'{terminal_time} Sourcing data from json files {end_time - start_time} seconds')
+except Exception as e: #if any json file is missing - process data from table 
+    #by lab by lin dict
+    start_time = time.time()
+    by_lab = df.groupby('testing_lab')
+    lab_dict = {lab:by_lab.get_group(lab) for lab in by_lab.groups}
+    by_lab_lin_df_dict = {lab:lab_dict[lab].groupby(['lineage', 'sampling_date']).size().to_frame().reset_index() for lab in lab_dict.keys()}
+    by_lab_lin_dict = {lab:{lin:dict(zip(by_lab_lin_df_dict[lab].groupby('lineage').get_group(lin)['sampling_date'], by_lab_lin_df_dict[lab].groupby('lineage').get_group(lin)[0])) for lin in by_lab_lin_df_dict[lab].groupby('lineage').groups} for lab in by_lab_lin_df_dict.keys()}
+    by_lab_lin_dict_full = {lab:{lin:[by_lab_lin_dict[lab][lin][date] if date in by_lab_lin_dict[lab][lin].keys() else 0 for date in unq_dates] for lin in by_lab_lin_dict[lab].keys()} for lab in by_lab_lin_dict.keys()}
+    by_lab_lin_dict = by_lab_lin_dict_full
+    
+    #by lin dict
+    by_lin = df.groupby(['lineage'])
+    lin_dict = {lin:by_lin.get_group(lin) for lin in by_lin.groups}
+    by_lin_df_dict = {lin:lin_dict[lin].groupby('sampling_date').size().to_frame().reset_index() for lin in lin_dict.keys()}
+    by_lin_dict = {lin:dict(zip(by_lin_df_dict[lin]['sampling_date'], by_lin_df_dict[lin][0])) for lin in by_lin_df_dict}
+    by_lin_dict_full = {lin:[by_lin_dict[lin][date] if date in by_lin_dict[lin].keys() else 0 for date in unq_dates] for lin in by_lin_dict.keys()}
+    by_lin_dict = by_lin_dict_full
+    by_lin_dict_rel = {key:[round(100*i/j,2) for i,j in zip(by_lin_dict[key], smpl_by_date)] for key in by_lin_dict.keys()}
+    
+    # Generating sample_by_date_by_lab_by_lin relative data
+    by_lab_lin_dict_rel = {key:{lin:[round(100*i/j,2) for i,j in zip(by_lab_lin_dict[key][lin], smpl_by_date)] for lin in by_lab_lin_dict[key].keys()} for key in by_lab_lin_dict.keys()}
+    for key in by_lab_lin_dict.keys():
+        by_lab_lin_dict[key]['sampling_date'] = unq_dates #adding sampling data to the data dict
+        by_lab_lin_dict[key]['total_cases'] = smpl_by_date #add total number of samples to the data dict
+        by_lab_lin_dict_rel[key]['sampling_date'] = unq_dates #adding sampling data to the data dict
+        by_lab_lin_dict_rel[key]['total_cases'] = smpl_by_date #add total number of samples to the data dict
 
-#For each testing lab, extracting lineage distribution for each sampling date
-by_lab_lin_dict = {}
-for key in by_ldf_dict.keys():
-    by_lab_lin_dict[key] = {}
-    with concurrent.futures.ProcessPoolExecutor() as executor: # applying the function in-parallel on different cores
-        results = [executor.submit(quadratic_df_search, unq_dict['sampling_date'], by_ldf_dict[key], lin, 'lineage', True) for lin in unq_dict['lineage']]#submitting function calls to different processes
-        for f in concurrent.futures.as_completed(results): #collecting processing result
-            if f.result()[1] is not None: by_lab_lin_dict[key][f.result()[0]] = f.result()[1]
-            else:continue
-                
-#Generating sample_by_date_by_lab_by_lin relative data
-by_lab_lin_dict_rel = {key:{lin:[round(100*i/j,2) for i,j in zip(by_lab_lin_dict[key][lin], smpl_by_date)] for lin in by_lab_lin_dict[key].keys()} for key in by_lab_lin_dict.keys()}
-for key in by_lab_lin_dict.keys():
-    by_lab_lin_dict[key]['sampling_date'] = unq_dict['sampling_date'] #adding sampling data to the data dict
-    by_lab_lin_dict[key]['total_cases'] = smpl_by_date #add total number of samples to the data dict
-    by_lab_lin_dict_rel[key]['sampling_date'] = unq_dict['sampling_date'] #adding sampling data to the data dict
-    by_lab_lin_dict_rel[key]['total_cases'] = smpl_by_date #add total number of samples to the data dict
+    with open('by_lab_lin_dict.json', "w") as outfile:
+        json.dump(by_lab_lin_dict, outfile)
+    with open('by_lin_dict.json', "w") as outfile:
+        json.dump(by_lin_dict, outfile)
+    with open('by_lab_lin_dict_rel.json', "w") as outfile:
+        json.dump(by_lab_lin_dict_rel, outfile)
+    with open('by_lin_dict_rel.json', "w") as outfile:
+        json.dump(by_lin_dict_rel, outfile)
+    end_time = time.time()
+    print(f'{terminal_time} Sourcing data from raw excel file: {e} {end_time - start_time} seconds')
 
-by_lin_dict = {}
-with concurrent.futures.ProcessPoolExecutor() as executor: # applying the function in-parallel on different cores
-    results = [executor.submit(quadratic_df_search, unq_dict['sampling_date'], smpl_info, lin, 'lineage') for lin in unq_dict['lineage']]#submitting function calls to different processes
-    for f in concurrent.futures.as_completed(results): #collecting processing results to the dict
-        by_lin_dict[f.result()[0]] = f.result()[1]
-by_lin_dict_rel = {key:[round(100*i/j,2) for i,j in zip(by_lin_dict[key], smpl_by_date)] for key in by_lin_dict.keys()}
-by_lin_dict_rel['sampling_date'] = unq_dict['sampling_date'] #adding sampling data to the data dict
-by_lin_dict_rel['total_cases'] = smpl_by_date #add total number of samples to the data dict
-
+#if any json file is missing - generate plots from data
+start_time = time.time()
 p_abs_list = {lab:stacked_bar_plot(by_lab_lin_dict[lab],unq_dict,'Celms') for lab in by_lab_lin_dict.keys()}
 by_lab_lin_dict['Kopā'] = by_lin_dict
-by_lab_lin_dict['Kopā']['sampling_date'] = unq_dict['sampling_date'] #adding sampling data to the data dict
+by_lab_lin_dict['Kopā']['sampling_date'] = unq_dates #adding sampling data to the data dict
 by_lab_lin_dict['Kopā']['total_cases'] = smpl_by_date
 p_abs_list['Kopā'] = stacked_bar_plot(by_lin_dict,unq_dict,'Celms')
 
 p_rel_list = {lab:stacked_bar_plot(by_lab_lin_dict_rel[lab],unq_dict,'Celms', units='rel') for lab in by_lab_lin_dict_rel.keys()}
 by_lab_lin_dict_rel['Kopā'] = by_lin_dict_rel
-by_lab_lin_dict_rel['Kopā']['sampling_date'] = unq_dict['sampling_date'] #adding sampling data to the data dict
+by_lab_lin_dict_rel['Kopā']['sampling_date'] = unq_dates #adding sampling data to the data dict
 by_lab_lin_dict_rel['Kopā']['total_cases'] = smpl_by_date
 p_rel_list['Kopā'] = stacked_bar_plot(by_lin_dict_rel,unq_dict,'Celms', units = 'rel')
 
-#Data wrangling to download
-data_to_download = ColumnDataSource(data=smpl_info)
+# json_p_abs_list = {lab:json_item(p_abs_list[lab], lab) for lab in p_abs_list.keys()}
+# json_p_rel_list = {lab:json_item(p_rel_list[lab], lab) for lab in p_rel_list.keys()}
 
-# #Creating bokeh document to serve
+# with open('p_abs_list.json', "w") as p_file_abs:
+#     json.dump(json_p_abs_list, p_file_abs)
+
+# with open('p_rel_list.json', "w") as p_file_rel:
+#     json.dump(json_p_rel_list, p_file_rel)
+end_time = time.time()
+print(f'{terminal_time} Generating plots from data: {end_time - start_time} seconds')
+
+
+#Data wrangling to download
+# data_to_download = ColumnDataSource(data=df)
+
+#Creating bokeh document to serve
 bokeh_doc = curdoc()
+global lg_r_list #declaring global variable to store legend renderers as they get updated
 
 #Custom interactivity
-global lg_r_list #declaring global variable to store legend renderers as they get updated
 def legend_callback(attr, old, new):
     range_start = datetime.fromtimestamp(r_slider.value[0] / 1e3) #get datetime object from slider current position - range start
     range_end = datetime.fromtimestamp(r_slider.value[1] / 1e3) #get datetime object from slider current position - range end
@@ -168,7 +200,6 @@ def legend_callback(attr, old, new):
     
 labs = [key for key in p_abs_list.keys()] #used to select lab from drop-down list
 empty_fig = figure(plot_width = 1000, plot_height = 1000, name='empty') #placeholder when no figure is selected
-
 select = Select(title = "Testēšanas laboratorija:", value = "", options = [""] + labs, name = "select", width = 500, align = 'start') #dropdown menu to select from
 
 def select_callback(attr, old,new):
@@ -241,9 +272,8 @@ def button_1_callback():
     df = combined_data.loc[combined_data['lineage']=='Empty']
     df = df.rename(columns = rename_dict)
     for key in lg_r_list.keys():lg_r_list[key].remove_on_change('visible', legend_callback)
-    for lg in legend: 
-        try: bokeh_doc.get_model_by_name(lg).visible = False
-        except: continue
+    for lg in lg_r_list.keys():
+        bokeh_doc.get_model_by_name(lg).visible = False
     data_table = DataTable(columns=Columns, source=ColumnDataSource(df), autosize_mode="fit_columns", aspect_ratio = 1, align = 'start', name = 'table')
     curdoc().get_model_by_name('row').children[1].children[0] = data_table #replace table
     for key in lg_r_list.keys():lg_r_list[key].on_change('visible', legend_callback)
@@ -260,9 +290,8 @@ def button_2_callback():
     else: df = combined_data.loc[(combined_data['sampling_date'].isin(list_of_dates))]
     df = df.rename(columns = rename_dict)
     for key in lg_r_list.keys():lg_r_list[key].remove_on_change('visible', legend_callback)
-    for lg in legend: 
-        try: bokeh_doc.get_model_by_name(lg).visible = True
-        except: continue
+    for lg in lg_r_list.keys(): 
+        bokeh_doc.get_model_by_name(lg).visible = True
     data_table = DataTable(columns=Columns, source=ColumnDataSource(df), autosize_mode="fit_columns", aspect_ratio = 1, align = 'start', name = 'table')
     curdoc().get_model_by_name('row').children[1].children[0] = data_table #replace table
     for key in lg_r_list.keys():lg_r_list[key].on_change('visible', legend_callback)
@@ -273,14 +302,6 @@ def button_3_callback():
     data_df.to_csv('/home/user/Desktop/RAKUS/31052021/report.csv',index = False, header=True)
     url = '/home/user/Desktop/RAKUS/31052021/report.csv'
     subprocess.check_call(['libreoffice', url])
-
-    #uncomment when other options are available
-    # url = f'{full_path}/4_reports/report_2405/found_samples_20210524-123754.csv'
-    # response = requests.get(url)
-    # with open('/home/user/Git/cov_flow/downstream/dstr_subprocess/found_samples_20210511-163630.csv', 'r+') as f:
-    #     writer = csv.writer(f)
-    #     for line in .iter_lines():
-    #         writer.writerow(line.decode('utf-8').split(','))
 
 def checkbox_callback(new):
     '''Show relative values for given selection if checked.'''
