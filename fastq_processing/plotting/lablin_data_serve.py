@@ -150,7 +150,6 @@ except Exception as e: #if any json file is missing - process data from table
     end_time = time.time()
     print(f'{terminal_time} Sourcing data from raw excel file: {e} {end_time - start_time} seconds')
 
-#if any json file is missing - generate plots from data
 start_time = time.time()
 p_abs_list = {lab:stacked_bar_plot(by_lab_lin_dict[lab],unq_dict,'Celms') for lab in by_lab_lin_dict.keys()}
 by_lab_lin_dict['Kopā'] = by_lin_dict
@@ -164,14 +163,6 @@ by_lab_lin_dict_rel['Kopā']['sampling_date'] = unq_dates #adding sampling data 
 by_lab_lin_dict_rel['Kopā']['total_cases'] = smpl_by_date
 p_rel_list['Kopā'] = stacked_bar_plot(by_lin_dict_rel,unq_dict,'Celms', units = 'rel')
 
-# json_p_abs_list = {lab:json_item(p_abs_list[lab], lab) for lab in p_abs_list.keys()}
-# json_p_rel_list = {lab:json_item(p_rel_list[lab], lab) for lab in p_rel_list.keys()}
-
-# with open('p_abs_list.json', "w") as p_file_abs:
-#     json.dump(json_p_abs_list, p_file_abs)
-
-# with open('p_rel_list.json', "w") as p_file_rel:
-#     json.dump(json_p_rel_list, p_file_rel)
 end_time = time.time()
 print(f'{terminal_time} Generating plots from data: {end_time - start_time} seconds')
 
