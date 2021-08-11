@@ -8,13 +8,13 @@ Pipeline is used to generate .vcf files & human-readable csv files from Illumina
 2. **Reads that passed QC are aligned to the reference** using *bwa*[3].
    - The output from *bwa*[3] is passed to *samtools*[4] to produce binary alignment map (bam) file.
 3. **Primer sequences are removed from bam file** using *ivar*[5].
-   - Primer sequences should be provided in Browser Extensible Data (bed) format - generated from fasta file using *bwa*[3] & *bedtools*[6]. 
-4. To improve alignment quality, **local realignment is performed** on primer-free bam file using *abra*[7], resulting in post-realignment bam file.
+   - Primer sequences should be provided in Browser Extensible Data (bed) format - generated 1 time for a primer set, from fasta file using *bwa*[3] & *bedtools*[6]. 
+4. To improve alignment quality, **local realignment is performed** on primer-free bam file using *abra*[7].
    - bed file with realignment targets is created from primer-free bam file using *bedtools*[6].
-5. **Alignment QC metrics are extracted** from raw and primer-free bam files using *samtools*[4], resulting in sequencing depth and mapped reads data stored in text files.
-6. **Variant-calling is performed** on post-realignment bam file using *freebayes*[8], resulting in *variant call file* (vcf).
+5. **Alignment QC metrics are extracted** from raw and primer-free bam files using *samtools*[4].
+6. **Variant-calling is performed** on post-realignment bam file using *freebayes*[8].
 7. **Raw variants are filtered** using *vcflib/vcffilter*[9] based on quality ([QUAL](https://samtools.github.io/hts-specs/VCFv4.1.pdf) > 30) and sequencing depth ([DP](https://samtools.github.io/hts-specs/VCFv4.1.pdf) > 15).
-8. **Filtered variants are annotated** using *snpEff*[10], resulting in annotated vcf file using [genbank reference] (https://www.ncbi.nlm.nih.gov/nuccore/MN908947).
+8. **Filtered variants are annotated** using *snpEff*[10], using [genbank reference] (https://www.ncbi.nlm.nih.gov/nuccore/MN908947).
 9. **Consensus sequence is generated** (in fasta format) from post-realignment bam file using *Consensufixer*[11].
     - invalid base (-) is called if coverage is less that 15.
 10. **Sample id is added to fasta header and invalid bases are replaced with N** using bash scripts.
