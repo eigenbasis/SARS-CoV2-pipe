@@ -8,7 +8,7 @@ Pipeline is used to generate .vcf files & human-readable csv files from Illumina
 2. **Reads that passed QC are aligned to the reference** using *bwa*[3].
    - The output from *bwa*[3] is passed to *samtools*[4] to produce binary alignment map (bam) file.
 3. **Primer sequences are removed from bam file** using *ivar*[5].
-   - Primer sequences should be provided in Browser Extensible Data (bed) format - generated 1 time for a primer set, from fasta file using *bwa*[3] & *bedtools*[6]. 
+   - Primer sequences should be provided in Browser Extensible Data (bed) format - generated from fasta file using *bwa*[3] & *bedtools*[6]. 
 4. To improve alignment quality, **local realignment is performed** on primer-free bam file using *abra*[7].
    - bed file with realignment targets is created from primer-free bam file using *bedtools*[6].
 5. **Alignment QC metrics are extracted** from raw and primer-free bam files using *samtools*[4].
