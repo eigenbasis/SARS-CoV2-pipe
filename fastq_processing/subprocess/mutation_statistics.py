@@ -10,10 +10,9 @@ for file in os.listdir(folder_path):
         if len(valid_mut_dict) == 0:
             df = pd.read_csv(f'{folder_path}/{file}').applymap(str)
             cur_mut_set = list(df.AMINO_ACID_CHANGE)
-            cur_ann_list = list(df.ANNOTATION)
-            valid_ann_dict = dict(zip(cur_mut_set, cur_ann_list))
-            if 'nan' in cur_mut_set:
-                cur_mut_set.remove('nan')
+            # cur_ann_list = list(df.ANNOTATION)
+            # valid_ann_dict = dict(zip(cur_mut_set, cur_ann_list))
+            while 'nan' in cur_mut_set: cur_mut_set.remove('nan')
             valid_mut_dict = dict(zip(cur_mut_set, [1 for _ in range(len(cur_mut_set))]))
         else:
             df = pd.read_csv(f'{folder_path}/{file}').applymap(str)
