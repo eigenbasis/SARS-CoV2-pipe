@@ -14,7 +14,7 @@ Pipeline is used to generate .vcf files & human-readable csv files from Illumina
 5. **Alignment QC metrics are extracted** from raw and primer-free bam files using *samtools*[4].
 6. **Variant-calling is performed** on post-realignment bam file using *freebayes*[8].
 7. **Raw variants are filtered** using *vcflib/vcffilter*[9] based on quality ([QUAL](https://samtools.github.io/hts-specs/VCFv4.1.pdf) > 30) and sequencing depth ([DP](https://samtools.github.io/hts-specs/VCFv4.1.pdf) > 15).
-8. **Filtered variants are annotated** using *snpEff*[10], using [genbank reference] (https://www.ncbi.nlm.nih.gov/nuccore/MN908947).
+8. **Filtered variants are annotated** using *snpEff*[10], using [genbank reference](https://www.ncbi.nlm.nih.gov/nuccore/MN908947).
 9. **Consensus sequence is generated** (in fasta format) from post-realignment bam file using *Consensufixer*[11].
     - invalid base (-) is called if coverage is less that 15.
 10. **Sample id is added to fasta header and invalid bases are replaced with N** using bash scripts.
