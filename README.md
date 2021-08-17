@@ -19,7 +19,7 @@ Pipeline is used to generate .vcf files & human-readable csv files from Illumina
     - invalid base (-) is called if coverage is less that 15.
 10. **Sample id is added to fasta header and invalid bases are replaced with N** using bash scripts.
 11. **Annotated vcf file is converted to csv format and coverage depth plot is generated**
-from sequencing depth data extracted with *samtools* using inhouse-developed python scripts.
+from sequencing depth data using inhouse-developed python scripts.
 12. **Temporary files are deleted** after each sample is processed.
 13. **Lineage assignment is performed** based on consensus sequence using *Pangolin*[12].
 14. Inhouse-developed python & bash scripts are used to control the flow of analysis for multiple samples, generate summary report and visualize the results.
