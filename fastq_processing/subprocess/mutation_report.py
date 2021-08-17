@@ -72,7 +72,7 @@ def depth_info_extractor(file_path):
 
     data = pd.read_csv(file_path, delimiter='\t').iloc[:,2] #convert depth report to a dataframe
     sample_id = re.search(r'([0-9]{10}|[0-9]{9})',file_path).group(0) #extract sample if from file name
-    result_row = {'SAMPLE_ID':sample_id, 'AVERAGE_COVERAGE':round(sum(data)/len(data),2)} #map average coverage to sample id in a dict
+    result_row = {'SAMPLE_ID':sample_id, 'AVERAGE_COVERAGE':sum(data)/len(data)} #map average coverage to sample id in a dict
     
     return result_row
 
