@@ -1,3 +1,4 @@
+
 #!/usr/bin/python3
 import sys, allel, pandas as pd, datetime, re
 
@@ -58,4 +59,3 @@ def vcf_to_csv(path_to_vcf,output_path=None):
 
 path_to_vcf, output_path = sys.argv[1], sys.argv[2]
 print(vcf_to_csv(path_to_vcf, output_path)) #stdoutput
-

@@ -1,6 +1,8 @@
 #!/bin/bash
-#The script is used to change standard headers in Consensusfixer-produced fasta file to GISAID-accepted fasta headers.
-
-consensus_path=${1} #path to consensus.fasta
-sample_id=$(echo $consensus_path | grep -oP '[0-9]{10}') #extracting sample id from path to consensus.fasta using regex
-sed -i "s/>CONSENSUS/>hCoV-19\/Latvia\/${sample_id}\/2021/" ${consensus_path} #replacing CONSENSUS header for GISAID format header using sed
+#THE SCRIPT IS USED TO CHANGE STANDARD HEADERS IN CONSENSUSFIXER-PRODUCED FASTA FILE TO GISAID-ACCEPTED FASTA HEADERS.
+consensus_path=${1} #PATH TO CONSENSUS.FASTA
+sample_id_raw=${2} #SAMPLE ID
+sample_id=$(python -c "print('${sample_id_raw}'.split('_',1)[1])")
+#REGEX=$(CAT ${2}) #READING REGEX PATTERN FROM FILE
+#SAMPLE_ID=$(ECHO $CONSENSUS_PATH | GREP -OP ${REGEX}) #EXTRACTING SAMPLE ID FROM PATH TO CONSENSUS.FASTA USING REGEX
+sed -i "s/>Consensus_${sample_id_raw}_consensus_threshold_0.5_quality_30/>hCoV-19\/Latvia\/${sample_id}\/$(date +'%Y')/" ${consensus_path} #REPLACING CONSENSUS HEADER FOR GISAID FORMAT HEADER USING SED
